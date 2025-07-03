@@ -337,22 +337,35 @@ class SegmentEditor(tk.Tk):
         if corrected is None:
             messagebox.showwarning("提示", "当前无图像可保存")
             return
-        file_path = filedialog.asksaveasfilename(defaultextension=".png",
-            filetypes=[("PNG文件", "*.png"), ("JPEG文件", "*.jpg *.jpeg"), ("所有文件", "*.*")]
+
+        # 从原路径获取默认文件名
+        import os
+        default_name = "output_fixed.jpg"
+        if hasattr(self, 'file_path') and self.file_path:
+            base = os.path.splitext(os.path.basename(self.file_path))[0]
+            default_name = f"{base}_fixed.jpg"
+
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".jpg",
+            initialfile=default_name,
+            filetypes=[("JPEG文件", "*.jpg *.jpeg"), ("PNG文件", "*.png"), ("所有文件", "*.*")]
         )
         if not file_path:
             return
+
         ext = file_path.split('.')[-1].lower()
         params = []
         if ext in ('jpg', 'jpeg'):
             params = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
         elif ext == 'png':
             params = [int(cv2.IMWRITE_PNG_COMPRESSION), 3]
+
         try:
             cv2.imwrite(file_path, corrected, params)
             messagebox.showinfo("保存成功", f"图像已保存为 {file_path}")
         except Exception as e:
             messagebox.showerror("错误", f"保存失败：{e}")
+
 
     def open_image(self):
         global img, height, width, segments, brightness, contrast, slant_points
@@ -383,6 +396,7 @@ class SegmentEditor(tk.Tk):
         self.brightness_var.set(brightness)
         self.contrast_var.set(contrast)
         self.update_preview()
+        self.file_path = file_path
 
 
     def on_window_resize(self, event):
